@@ -1,0 +1,798 @@
+---
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL ?? "";
+const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
+---
+
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Pure Electric 電動キックボード試乗予約受付システム"
+    />
+    <title>Pure Electric 試乗予約システム</title>
+    <script
+      id="app-config"
+      type="application/json"
+      is:inline
+      set:html={JSON.stringify({ supabaseUrl, supabaseAnonKey })}
+    />
+    <script>
+      import "../scripts/reservation-app.js";
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#customer" aria-label="予約トップへ">
+        <img
+          class="brand-logo"
+          src="https://pureelectric.jp/cdn/shop/files/Pure_stem_logo_256x256_white.png?v=1727361759&width=190"
+          alt="Pure Electric Japan"
+          width="190"
+          height="36"
+        />
+        <span>
+          <strong>Pure Electric</strong>
+          <small>予約システム</small>
+        </span>
+      </a>
+      <a class="admin-link" href="#admin">管理者メニュー</a>
+    </header>
+
+    <main>
+      <section class="notice" data-setup-notice hidden>
+        <strong>設定が必要です。</strong>
+        <span>
+          <code>PUBLIC_SUPABASE_URL</code> と
+          <code>PUBLIC_SUPABASE_ANON_KEY</code> を設定してください。
+        </span>
+      </section>
+
+      <section class="grid-shell" id="customer">
+        <div class="primary-panel">
+          <div class="loading-state" data-loading>
+            <span class="spinner" aria-hidden="true"></span>
+            <span>予約状況を確認しています...</span>
+          </div>
+
+          <div data-customer-panel hidden>
+            <article class="ticket-panel" data-ticket-panel hidden>
+              <div class="success-icon" aria-hidden="true">✓</div>
+              <p class="eyebrow">ご予約を受け付けました</p>
+              <h1>あなたの受付番号</h1>
+              <div class="ticket-number" data-ticket-number>A-001</div>
+              <dl class="ticket-meta">
+                <div>
+                  <dt>受付時刻</dt>
+                  <dd data-ticket-time>-</dd>
+                </div>
+                <div>
+                  <dt>受付日</dt>
+                  <dd data-ticket-date>-</dd>
+                </div>
+                <div>
+                  <dt>ステータス</dt>
+                  <dd data-ticket-status>-</dd>
+                </div>
+              </dl>
+              <p class="helper-text">
+                順番が近づきましたらスタッフがお声がけします。この画面を閉じても、同じスマートフォンの同じブラウザで再表示できます。
+              </p>
+            </article>
+
+            <article class="booking-panel" data-booking-panel>
+              <p class="eyebrow">Pure Electric 電動キックボード</p>
+              <h1>試乗予約受付</h1>
+              <p class="lead">
+                英国発のプレミアム電動キックボードを会場で体験できます。16歳以上であることを確認して、受付番号を取得してください。
+              </p>
+              <label class="age-box">
+                <input type="checkbox" data-age-check />
+                <span>
+                  私は16歳以上です。
+                  <small>16歳未満の方はテストライドをご利用いただけません。</small>
+                </span>
+              </label>
+              <button class="reserve-button" type="button" data-reserve-button>
+                予約を確定する
+              </button>
+            </article>
+          </div>
+
+          <p class="message" data-customer-message></p>
+        </div>
+
+        <aside class="guide-panel" aria-label="ご案内">
+          <h2>ご案内</h2>
+          <ul>
+            <li>
+              <span aria-hidden="true">🛴</span>
+              <div>
+                <strong>試乗について</strong>
+                <p>Pure Electricの電動キックボードを、スタッフの案内に沿ってご体験いただけます。</p>
+              </div>
+            </li>
+            <li>
+              <span aria-hidden="true">⏱</span>
+              <div>
+                <strong>順番について</strong>
+                <p>受付番号順にご案内します。</p>
+              </div>
+            </li>
+            <li>
+              <span aria-hidden="true">🔔</span>
+              <div>
+                <strong>呼び出しについて</strong>
+                <p>順番が近づきましたらスタッフがお声がけします。</p>
+              </div>
+            </li>
+            <li>
+              <span aria-hidden="true">✅</span>
+              <div>
+                <strong>ご確認ください</strong>
+                <p>16歳以上の方が対象です。試乗前にスタッフから安全説明を行います。</p>
+              </div>
+            </li>
+          </ul>
+          <figure class="lando-card">
+            <img
+              src="https://pureelectric.jp/cdn/shop/files/friday_6_2000x.png?v=1765256824"
+              alt="Lando Norris with Pure Electric and McLaren collaboration imagery"
+              loading="lazy"
+            />
+            <figcaption>
+              Lando Norris / PURE x McLaren
+              <small>Image: Pure Electric Japan</small>
+            </figcaption>
+          </figure>
+          <div class="safety-box">
+            <strong>Pure Electric 公式ストア</strong>
+            <p>
+              春の新生活応援キャンペーン開催中。通常PUREモデルは10%OFF、公式LINE追加でオンラインストア送料無料クーポンも案内されています。
+            </p>
+            <a href="https://pureelectric.jp/" target="_blank" rel="noreferrer">
+              pureelectric.jp
+            </a>
+          </div>
+        </aside>
+      </section>
+
+      <section class="admin-section" id="admin">
+        <div class="admin-intro">
+          <p class="eyebrow">関係者専用</p>
+          <h2>管理者メニュー</h2>
+          <p>本日の受付状況と各予約の受付時刻を確認できます。</p>
+        </div>
+
+        <div class="admin-controls">
+          <label>
+            <span>パスワード</span>
+            <input
+              type="password"
+              data-admin-password
+              autocomplete="current-password"
+              placeholder="パスワードを入力"
+            />
+          </label>
+          <button type="button" data-admin-login>ログイン</button>
+          <button type="button" class="secondary-button" data-admin-refresh>
+            更新
+          </button>
+        </div>
+        <p class="message" data-admin-message></p>
+
+        <div class="admin-table-wrap" data-admin-panel hidden>
+          <table>
+            <thead>
+              <tr>
+                <th>受付番号</th>
+                <th>受付時刻</th>
+                <th>端末ID</th>
+                <th>ステータス</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody data-admin-table-body></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
+
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f7f8f6;
+    --surface: #ffffff;
+    --ink: #12151b;
+    --muted: #68717f;
+    --line: #dfe4e7;
+    --red: #e0082d;
+    --red-dark: #ba0626;
+    --teal: #0e7d86;
+    --teal-soft: #e5f3f4;
+    --shadow: 0 18px 60px rgba(18, 21, 27, 0.08);
+    font-family:
+      Inter, "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic",
+      system-ui, sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(247, 248, 246, 0)),
+      var(--bg);
+    color: var(--ink);
+  }
+
+  button,
+  input {
+    font: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  code {
+    font-family: "SFMono-Regular", Consolas, monospace;
+  }
+
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    border-bottom: 3px solid var(--red);
+    background: rgba(255, 255, 255, 0.94);
+    padding: 18px clamp(18px, 4vw, 54px);
+    backdrop-filter: blur(18px);
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .brand-logo {
+    display: block;
+    width: 118px;
+    height: auto;
+    filter: invert(1);
+  }
+
+  .brand strong {
+    display: block;
+    font-size: clamp(1.2rem, 2vw, 2rem);
+    line-height: 1.1;
+  }
+
+  .brand small {
+    display: block;
+    margin-top: 4px;
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .admin-link {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--ink);
+    padding: 10px 14px;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  main {
+    width: min(1480px, calc(100% - 36px));
+    margin: 0 auto;
+    padding: 28px 0 48px;
+  }
+
+  .notice,
+  .primary-panel,
+  .guide-panel,
+  .admin-section {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: var(--shadow);
+  }
+
+  .notice {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin-bottom: 18px;
+    padding: 16px 18px;
+    color: var(--red-dark);
+  }
+
+  .grid-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: 22px;
+  }
+
+  .primary-panel {
+    min-height: 560px;
+    padding: clamp(24px, 5vw, 54px);
+  }
+
+  .loading-state {
+    display: flex;
+    min-height: 420px;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .spinner {
+    width: 22px;
+    height: 22px;
+    border: 3px solid var(--line);
+    border-top-color: var(--teal);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+  }
+
+  .ticket-panel,
+  .booking-panel {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .success-icon {
+    display: grid;
+    width: 56px;
+    height: 56px;
+    margin-bottom: 14px;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--teal);
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 800;
+  }
+
+  .eyebrow {
+    margin: 0 0 10px;
+    color: var(--red);
+    font-weight: 900;
+  }
+
+  h1,
+  h2 {
+    margin: 0;
+    line-height: 1.12;
+    letter-spacing: 0;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3.1rem);
+  }
+
+  h2 {
+    font-size: clamp(1.4rem, 3vw, 2rem);
+  }
+
+  .lead {
+    max-width: 720px;
+    margin: 18px auto 28px;
+    color: var(--muted);
+    font-size: 1.08rem;
+    line-height: 1.8;
+  }
+
+  .ticket-number {
+    margin: 18px 0 10px;
+    color: var(--teal);
+    font-size: clamp(4.5rem, 13vw, 8.6rem);
+    font-weight: 950;
+    line-height: 0.95;
+  }
+
+  .ticket-meta {
+    display: grid;
+    width: min(720px, 100%);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    margin: 28px 0 18px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--line);
+  }
+
+  .ticket-meta div {
+    background: #fff;
+    padding: 18px;
+  }
+
+  .ticket-meta dt {
+    color: var(--muted);
+    font-size: 0.86rem;
+    font-weight: 800;
+  }
+
+  .ticket-meta dd {
+    margin: 8px 0 0;
+    font-size: 1.05rem;
+    font-weight: 900;
+  }
+
+  .helper-text {
+    max-width: 740px;
+    margin: 0;
+    border-radius: 8px;
+    background: var(--teal-soft);
+    color: #155962;
+    padding: 14px 18px;
+    line-height: 1.7;
+  }
+
+  .age-box {
+    display: grid;
+    width: min(740px, 100%);
+    grid-template-columns: 24px 1fr;
+    gap: 14px;
+    align-items: start;
+    border: 2px solid rgba(224, 8, 45, 0.45);
+    border-radius: 8px;
+    padding: 18px;
+    text-align: left;
+  }
+
+  .age-box input {
+    width: 22px;
+    height: 22px;
+    accent-color: var(--red);
+  }
+
+  .age-box span {
+    font-weight: 900;
+  }
+
+  .age-box small {
+    display: block;
+    margin-top: 5px;
+    color: var(--muted);
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  .reserve-button {
+    width: min(740px, 100%);
+    margin-top: 18px;
+    border: 0;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #f0143a, var(--red));
+    color: #fff;
+    padding: 20px 22px;
+    font-size: clamp(1.15rem, 3vw, 1.65rem);
+    font-weight: 950;
+    box-shadow: 0 16px 28px rgba(224, 8, 45, 0.18);
+  }
+
+  .message {
+    min-height: 28px;
+    margin: 18px 0 0;
+    color: var(--muted);
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .message[data-tone="error"] {
+    color: var(--red-dark);
+  }
+
+  .message[data-tone="success"] {
+    color: var(--teal);
+  }
+
+  .guide-panel {
+    padding: 24px;
+  }
+
+  .guide-panel h2 {
+    margin-bottom: 18px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .guide-panel ul {
+    display: grid;
+    gap: 22px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .guide-panel li {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 14px;
+    align-items: start;
+  }
+
+  .guide-panel li > span {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--teal-soft);
+  }
+
+  .guide-panel strong {
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  .guide-panel p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .lando-card {
+    margin: 28px 0 0;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .lando-card img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+
+  .lando-card figcaption {
+    display: grid;
+    gap: 4px;
+    padding: 12px 14px;
+    color: var(--ink);
+    font-size: 0.92rem;
+    font-weight: 900;
+    line-height: 1.4;
+  }
+
+  .lando-card small {
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .safety-box {
+    margin-top: 28px;
+    border: 1px solid rgba(14, 125, 134, 0.45);
+    border-radius: 8px;
+    padding: 18px;
+  }
+
+  .safety-box a {
+    display: inline-flex;
+    margin-top: 14px;
+    border-radius: 8px;
+    background: var(--ink);
+    color: #fff;
+    padding: 10px 14px;
+    font-weight: 900;
+    text-decoration: none;
+  }
+
+  .admin-section {
+    margin-top: 22px;
+    padding: 26px;
+  }
+
+  .admin-section {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 22px;
+    align-items: start;
+  }
+
+  .admin-intro p:last-child {
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .admin-controls {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) auto auto;
+    gap: 10px;
+    align-items: end;
+  }
+
+  .admin-controls label {
+    display: grid;
+    gap: 7px;
+    color: var(--muted);
+    font-size: 0.88rem;
+    font-weight: 800;
+  }
+
+  .admin-controls input {
+    min-height: 48px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0 14px;
+  }
+
+  .admin-controls button,
+  .secondary-button,
+  .small-button {
+    min-height: 48px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--ink);
+    color: #fff;
+    padding: 0 18px;
+    font-weight: 900;
+  }
+
+  .secondary-button {
+    border: 1px solid var(--line) !important;
+    background: #fff !important;
+    color: var(--ink) !important;
+  }
+
+  .admin-table-wrap {
+    grid-column: 1 / -1;
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+
+  table {
+    width: 100%;
+    min-width: 720px;
+    border-collapse: collapse;
+    background: #fff;
+  }
+
+  th,
+  td {
+    border-bottom: 1px solid var(--line);
+    padding: 13px 14px;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  th {
+    background: #f2f4f3;
+    color: #333a43;
+    font-size: 0.86rem;
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .number-cell {
+    color: var(--teal);
+    font-weight: 950;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    border-radius: 999px;
+    background: var(--teal-soft);
+    color: var(--teal);
+    padding: 4px 10px;
+    font-size: 0.84rem;
+    font-weight: 900;
+  }
+
+  .status-pill[data-status="completed"] {
+    background: #eef0f2;
+    color: var(--muted);
+  }
+
+  .small-button {
+    min-height: 34px;
+    padding: 0 12px;
+    font-size: 0.86rem;
+  }
+
+  .empty-cell {
+    color: var(--muted);
+    text-align: center;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (max-width: 980px) {
+    .grid-shell,
+    .admin-section {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 660px) {
+    .site-header {
+      position: static;
+      align-items: flex-start;
+      padding: 14px 16px;
+    }
+
+    .brand {
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 96px;
+    }
+
+    .admin-link {
+      display: none;
+    }
+
+    main {
+      width: min(100% - 24px, 1480px);
+      padding-top: 12px;
+    }
+
+    .primary-panel,
+    .guide-panel,
+    .admin-section {
+      padding: 18px;
+    }
+
+    .ticket-meta {
+      grid-template-columns: 1fr;
+    }
+
+    .admin-controls {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+</style>
