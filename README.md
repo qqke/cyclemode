@@ -43,10 +43,7 @@ GitHub repository secrets に以下を設定します。
 - `PUBLIC_SUPABASE_URL`
 - `PUBLIC_SUPABASE_ANON_KEY`
 
-必要に応じて repository variables に以下を設定します。
-
-- `SITE_URL`: `https://your-user.github.io`
-- `BASE_PATH`: `/your-repository-name`
+`SITE_URL` と `BASE_PATH` は GitHub Actions workflow 側で自動設定されます。
 
 `main` ブランチへ push すると GitHub Pages にデプロイされます。
 
