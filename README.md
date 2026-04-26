@@ -24,22 +24,17 @@ npm run dev
 ## Supabase セットアップ
 
 1. Supabase プロジェクトを作成します。
-2. `supabase/migrations/001_reservations.sql` を適用します。
-3. Edge Functions をデプロイします。
+2. `supabase/migrations` 配下の SQL を番号順に適用します。
+3. 管理者パスワードを SQL で設定します。
 
-```bash
-supabase functions deploy createReservation
-supabase functions deploy adminListReservations
-supabase functions deploy adminUpdateReservationStatus
+```sql
+update public.app_settings
+   set value = extensions.crypt('your-booth-password', extensions.gen_salt('bf')),
+       updated_at = now()
+ where key = 'admin_password_hash';
 ```
 
-4. 管理者パスワードを secret に設定します。
-
-```bash
-supabase secrets set ADMIN_PASSWORD="your-booth-password"
-```
-
-`SUPABASE_URL` と `SUPABASE_SERVICE_ROLE_KEY` は Supabase Functions 環境で自動的に利用されます。
+Edge Functions は使用しません。予約作成、予約再表示、管理者一覧、ステータス更新は Supabase の SQL function を `rpc` で直接呼び出します。
 
 ## GitHub Pages
 

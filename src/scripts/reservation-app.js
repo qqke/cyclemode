@@ -53,6 +53,27 @@ function getDeviceId() {
   return id;
 }
 
+async function hashDeviceId(deviceId) {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(deviceId)
+  );
+  return Array.from(new Uint8Array(digest), (byte) =>
+    byte.toString(16).padStart(2, "0")
+  ).join("");
+}
+
+function getTokyoDate() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
 function formatDateTime(value) {
   return new Intl.DateTimeFormat("ja-JP", {
     month: "2-digit",
@@ -63,7 +84,14 @@ function formatDateTime(value) {
 }
 
 function normalizeReservation(payload) {
-  return payload?.reservation ?? payload;
+  const reservation = Array.isArray(payload)
+    ? payload[0]
+    : (payload?.reservation ?? payload);
+  if (!reservation) return null;
+  if (reservation.queue_number == null) {
+    throw new Error("受付番号を取得できませんでした。");
+  }
+  return reservation;
 }
 
 function renderReservation(reservation) {
@@ -83,13 +111,19 @@ function renderReservation(reservation) {
   els.bookingPanel.hidden = true;
 }
 
-async function callFunction(name, body) {
-  const { data, error } = await state.client.functions.invoke(name, { body });
+async function callRpc(name, params) {
+  const { data, error } = await state.client.rpc(name, params);
   if (error) {
+    if (error.message?.includes("AGE_CONFIRMATION_REQUIRED")) {
+      throw new Error("16歳以上であることを確認してください。");
+    }
+    if (error.message?.includes("ADMIN_PASSWORD_INVALID")) {
+      throw new Error("パスワードが正しくありません。");
+    }
+    if (error.message?.includes("INVALID_STATUS")) {
+      throw new Error("更新内容が正しくありません。");
+    }
     throw new Error(error.message || "通信に失敗しました。");
-  }
-  if (data?.error) {
-    throw new Error(data.error);
   }
   return data;
 }
@@ -98,9 +132,9 @@ async function loadOwnReservation() {
   els.loading.hidden = false;
   els.customerPanel.hidden = true;
   try {
-    const data = await callFunction("createReservation", {
-      action: "get",
-      deviceId: state.deviceId
+    const data = await callRpc("get_own_reservation", {
+      p_event_date: getTokyoDate(),
+      p_device_hash: await hashDeviceId(state.deviceId)
     });
     renderReservation(normalizeReservation(data));
     if (!state.reservation) {
@@ -131,10 +165,10 @@ async function createReservation() {
   els.reserveButton.disabled = true;
   setMessage(els.customerMessage, "予約を受け付けています...");
   try {
-    const data = await callFunction("createReservation", {
-      action: "create",
-      deviceId: state.deviceId,
-      ageConfirmed: true
+    const data = await callRpc("create_or_get_reservation", {
+      p_event_date: getTokyoDate(),
+      p_device_hash: await hashDeviceId(state.deviceId),
+      p_age_confirmed: true
     });
     renderReservation(normalizeReservation(data));
     setMessage(
@@ -193,10 +227,11 @@ async function loadAdminReservations() {
   els.adminRefresh.disabled = true;
   setMessage(els.adminMessage, "予約一覧を読み込んでいます...");
   try {
-    const data = await callFunction("adminListReservations", {
-      password: state.adminPassword
+    const data = await callRpc("admin_list_reservations", {
+      p_event_date: getTokyoDate(),
+      p_admin_password: state.adminPassword
     });
-    state.reservations = data.reservations ?? [];
+    state.reservations = data ?? [];
     renderAdminRows(state.reservations);
     els.adminPanel.hidden = false;
     setMessage(
@@ -215,10 +250,10 @@ async function loadAdminReservations() {
 async function completeReservation(id) {
   setMessage(els.adminMessage, "ステータスを更新しています...");
   try {
-    await callFunction("adminUpdateReservationStatus", {
-      password: state.adminPassword,
-      reservationId: id,
-      status: "completed"
+    await callRpc("admin_update_reservation_status", {
+      p_admin_password: state.adminPassword,
+      p_reservation_id: id,
+      p_status: "completed"
     });
     await loadAdminReservations();
   } catch (error) {
